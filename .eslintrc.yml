@@ -1,0 +1,11 @@
+root: 
+  true
+extends: 
+  - "@nuxtjs/eslint-config-typescript"
+rules:
+  "import/no-named-as-default-member": 0
+  "array-callback-return": 0
+  "no-prototype-builtins": 0
+  "vue/no-use-v-if-with-v-for": 0
+  "camelcase": 0
+  "vue/no-multiple-template-root": 0

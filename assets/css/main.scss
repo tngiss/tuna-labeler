@@ -1,0 +1,537 @@
+@use "vuetify/styles";
+
+@viewport {
+  width: device-width;
+  zoom: 1;
+}
+
+@font-face {
+  font-family: "Futura LT";
+  src: url("/assets/fonts/FuturaLT-Light.eot");
+  src:
+    local("Futura LT Light"),
+    local("FuturaLT-Light"),
+    url("/assets/fonts/FuturaLT-Light.eot?#iefix") format("embedded-opentype"),
+    url("/assets/fonts/FuturaLT-Light.woff2") format("woff2"),
+    url("/assets/fonts/FuturaLT-Light.woff") format("woff"),
+    url("/assets/fonts/FuturaLT-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Futura LT";
+  src: url("/assets/fonts/FuturaLT-ExtraBold.eot");
+  src:
+    local("Futura LT Extra Bold"),
+    local("FuturaLT-ExtraBold"),
+    url("/assets/fonts/FuturaLT-ExtraBold.eot?#iefix")
+      format("embedded-opentype"),
+    url("/assets/fonts/FuturaLT-ExtraBold.woff2") format("woff2"),
+    url("/assets/fonts/FuturaLT-ExtraBold.woff") format("woff"),
+    url("/assets/fonts/FuturaLT-ExtraBold.ttf") format("truetype");
+  font-weight: 800;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Futura LT";
+  src: url("/assets/fonts/FuturaLT-ExtraBoldOblique.eot");
+  src:
+    local("Futura LT Extra Bold Oblique"),
+    local("FuturaLT-ExtraBoldOblique"),
+    url("/assets/fonts/FuturaLT-ExtraBoldOblique.eot?#iefix")
+      format("embedded-opentype"),
+    url("/assets/fonts/FuturaLT-ExtraBoldOblique.woff2") format("woff2"),
+    url("/assets/fonts/FuturaLT-ExtraBoldOblique.woff") format("woff"),
+    url("/assets/fonts/FuturaLT-ExtraBoldOblique.ttf") format("truetype");
+  font-weight: 800;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Futura LT";
+  src: url("/assets/fonts/FuturaLT-LightOblique.eot");
+  src:
+    local("Futura LT Light Oblique"),
+    local("FuturaLT-LightOblique"),
+    url("/assets/fonts/FuturaLT-LightOblique.eot?#iefix")
+      format("embedded-opentype"),
+    url("/assets/fonts/FuturaLT-LightOblique.woff2") format("woff2"),
+    url("/assets/fonts/FuturaLT-LightOblique.woff") format("woff"),
+    url("/assets/fonts/FuturaLT-LightOblique.ttf") format("truetype");
+  font-weight: 300;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Futura LT";
+  src: url("/assets/fonts/FuturaLT-Book.eot");
+  src:
+    local("Futura LT Book"),
+    local("FuturaLT-Book"),
+    url("/assets/fonts/FuturaLT-Book.eot?#iefix") format("embedded-opentype"),
+    url("/assets/fonts/FuturaLT-Book.woff2") format("woff2"),
+    url("/assets/fonts/FuturaLT-Book.woff") format("woff"),
+    url("/assets/fonts/FuturaLT-Book.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Futura LT";
+  src: url("/assets/fonts/FuturaLT-Oblique.eot");
+  src:
+    local("Futura LT Medium Oblique"),
+    local("FuturaLT-Oblique"),
+    url("/assets/fonts/FuturaLT-Oblique.eot?#iefix") format("embedded-opentype"),
+    url("/assets/fonts/FuturaLT-Oblique.woff2") format("woff2"),
+    url("/assets/fonts/FuturaLT-Oblique.woff") format("woff"),
+    url("/assets/fonts/FuturaLT-Oblique.ttf") format("truetype");
+  font-weight: 500;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Futura LT";
+  src: url("/assets/fonts/FuturaLT.eot");
+  src:
+    local("Futura LT Medium"),
+    local("FuturaLT"),
+    url("/assets/fonts/FuturaLT.eot?#iefix") format("embedded-opentype"),
+    url("/assets/fonts/FuturaLT.woff2") format("woff2"),
+    url("/assets/fonts/FuturaLT.woff") format("woff"),
+    url("/assets/fonts/FuturaLT.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Futura LT";
+  src: url("/assets/fonts/FuturaLT-BookOblique.eot");
+  src:
+    local("Futura LT Book Oblique"),
+    local("FuturaLT-BookOblique"),
+    url("/assets/fonts/FuturaLT-BookOblique.eot?#iefix")
+      format("embedded-opentype"),
+    url("/assets/fonts/FuturaLT-BookOblique.woff2") format("woff2"),
+    url("/assets/fonts/FuturaLT-BookOblique.woff") format("woff"),
+    url("/assets/fonts/FuturaLT-BookOblique.ttf") format("truetype");
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Futura LT";
+  src: url("/assets/fonts/FuturaLT-HeavyOblique.eot");
+  src:
+    local("Futura LT Heavy Oblique"),
+    local("FuturaLT-HeavyOblique"),
+    url("/assets/fonts/FuturaLT-HeavyOblique.eot?#iefix")
+      format("embedded-opentype"),
+    url("/assets/fonts/FuturaLT-HeavyOblique.woff2") format("woff2"),
+    url("/assets/fonts/FuturaLT-HeavyOblique.woff") format("woff"),
+    url("/assets/fonts/FuturaLT-HeavyOblique.ttf") format("truetype");
+  font-weight: 900;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Futura LT";
+  src: url("/assets/fonts/FuturaLT-BoldOblique.eot");
+  src:
+    local("Futura LT Bold Oblique"),
+    local("FuturaLT-BoldOblique"),
+    url("/assets/fonts/FuturaLT-BoldOblique.eot?#iefix")
+      format("embedded-opentype"),
+    url("/assets/fonts/FuturaLT-BoldOblique.woff2") format("woff2"),
+    url("/assets/fonts/FuturaLT-BoldOblique.woff") format("woff"),
+    url("/assets/fonts/FuturaLT-BoldOblique.ttf") format("truetype");
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Futura LT";
+  src: url("/assets/fonts/FuturaLT-Bold.eot");
+  src:
+    local("Futura LT Bold"),
+    local("FuturaLT-Bold"),
+    url("/assets/fonts/FuturaLT-Bold.eot?#iefix") format("embedded-opentype"),
+    url("/assets/fonts/FuturaLT-Bold.woff2") format("woff2"),
+    url("/assets/fonts/FuturaLT-Bold.woff") format("woff"),
+    url("/assets/fonts/FuturaLT-Bold.ttf") format("truetype");
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Futura LT";
+  src: url("/assets/fonts/FuturaLT-Heavy.eot");
+  src:
+    local("Futura LT Heavy"),
+    local("FuturaLT-Heavy"),
+    url("/assets/fonts/FuturaLT-Heavy.eot?#iefix") format("embedded-opentype"),
+    url("/assets/fonts/FuturaLT-Heavy.woff2") format("woff2"),
+    url("/assets/fonts/FuturaLT-Heavy.woff") format("woff"),
+    url("/assets/fonts/FuturaLT-Heavy.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+}
+
+html {
+  font-family: "Futura LT", sans-serif !important;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.full-height {
+  height: 100svh;
+}
+
+.text-h6,
+.text-h5,
+.text-h4,
+.text-h3,
+.text-h2,
+.text-h1 {
+  font-family: "Futura LT", sans-serif !important;
+}
+
+.entry-bg {
+  background-image: url("/assets/images/bg/slide_1.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  height: 100vh;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    height: 100%;
+    width: 100%;
+    z-index: -1;
+  }
+}
+
+.top-bg {
+  background-image: url("/assets/images/bg/slide_2.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  height: 100vh;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: rgba(255, 255, 255, 0.7);
+    height: 100%;
+    width: 100%;
+    z-index: -1;
+  }
+}
+
+.z-content {
+  z-index: 2;
+}
+
+.camera_circle {
+  position: absolute;
+  width: 100%;
+  z-index: 50;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.camera_circle_container {
+  position: relative;
+  width: 100%;
+  height: calc(100dvh - 9rem);
+}
+
+.camera_input {
+  display: none;
+}
+
+.camera_container {
+  position: relative;
+  overflow: hidden !important;
+}
+
+.menu-icon {
+  width: 36px;
+}
+
+.menu-button-wrapper {
+  justify-content: start !important;
+  padding: 0 !important;
+}
+
+.camera-shoot {
+  width: 72px;
+  height: 72px;
+}
+
+.v-overlay__content {
+  width: 100%;
+  padding: 12px;
+}
+
+.custom-gradient {
+  // background linear black
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(0, 0, 0, 0.9) 85%
+  );
+}
+
+.custom-app-bar {
+  background-color: #4c4c4c;
+  margin: -16px -16px 0 -16px;
+}
+
+.back-button {
+  z-index: 2001;
+}
+
+canvas {
+  display: none;
+}
+
+video,
+canvas,
+.canvas-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100dvh - 9rem);
+  object-fit: cover;
+  object-position: center;
+  background-color: black;
+}
+
+@media only screen and (width: 375px) {
+  video,
+  canvas {
+    object-fit: fill !important;
+    background-size: cover !important;
+  }
+}
+
+@media only screen and (width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) {
+  video,
+  canvas {
+    object-fit: fill !important;
+    background-size: cover !important;
+  }
+}
+
+@media only screen and (width: 393px) {
+  video,
+  canvas {
+    object-fit: fill !important;
+    background-size: cover !important;
+  }
+}
+
+.utility-wrapper {
+  display: flex;
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  height: 9rem;
+}
+
+.settings-wrapper {
+  display: flex;
+  bottom: 0;
+  height: calc(100svh - 56px);
+  align-items: center !important;
+}
+
+.settings-rank-actions {
+  left: 10vw;
+  margin-bottom: 1rem;
+  width: 80vw;
+  position: fixed;
+  bottom: 0;
+}
+
+// .canvas-image {
+//   display: none;
+//   width: 100vw;
+//   height: calc(100vw * 1.333);
+//   object-fit: cover;
+// }
+
+.fade-in-image {
+  animation: fadeIn 3s;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.button-bottom-wrapper {
+  position: absolute;
+  bottom: 0;
+  background-color: #4c4c4c;
+  width: 100%;
+  padding: 12px;
+}
+
+.library-image {
+  width: 44px;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 100%;
+}
+
+.archive-subheader {
+  height: 30px;
+  width: 100vw;
+  margin: 0 -16px 0 -16px;
+  background-color: #6e6761;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: medium;
+}
+
+.archive-detail-image {
+  width: 100vw;
+  margin: 0 -16px 0 -16px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+
+.v-overlay__scrim {
+  background: linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.9) 0%,
+    rgba(0, 0, 0, 0) 100%
+  ) !important;
+}
+
+.v-sheet--border {
+  border-width: 1px !important;
+  border-color: #fff !important;
+}
+
+.z-50 {
+  z-index: 50;
+}
+
+.z-100 {
+  z-index: 100;
+}
+
+.font-600 {
+  font-weight: 600 !important;
+}
+
+.font-800 {
+  font-weight: 800 !important;
+}
+
+.font-900 {
+  font-weight: 900 !important;
+}
+
+.text-112 {
+  font-size: 112px !important;
+}
+
+.line-height-08 {
+  line-height: 0.8 !important;
+}
+
+.margin-n-5 {
+  margin: -5px !important;
+}
+
+.text-caption {
+  font-family: "Futura LT", sans-serif !important;
+}
+
+.h-60 {
+  height: 60px !important;
+}
+
+.white-bg-button > div > div > .v-field__field {
+  background-color: #fff !important;
+  color: #000 !important;
+  height: 44px !important;
+  border-radius: 6px !important;
+}
+
+.top-wrapper {
+  margin-top: 100px !important;
+}
+
+.settings-bg-button > div > div > .v-field__field {
+  background-color: #fff !important;
+  color: #000 !important;
+  height: 32px !important;
+}
+
+.settings-bg-button > div > div > .v-field__field > input {
+  height: 32px !important;
+  padding: 0 16px !important;
+  line-height: 1 !important;
+  min-height: 36px !important;
+}
+
+.w-122px {
+  width: 122px !important;
+}
+
+.text-16 {
+  font-size: 16px;
+}
+.rounded-checkbox .v-input {
+  border-radius: 50%;
+}
+.rounded-checkbox .v-input__control {
+  border-radius: 50%;
+}
+.custom-select {
+  width: 300px;
+  height: 44px;
+  --v-field-control-height: 44px; /* Sets the control height */
+  --v-field-outline-border-width: 2px; /* Optional: adjust border thickness */
+  --v-field-outline-color: #000; /* Optional: customize border color */
+}
+
+.rank-selection-overlay > .v-overlay__content {
+  height: 45vh;
+  bottom: 5vh;
+  align-content: flex-end;
+}
+
+.h-100-important {
+  height: 100% !important;
+}
