@@ -4,8 +4,9 @@ import vuetify from 'vite-plugin-vuetify'
 export default defineNuxtConfig({
   ssr: false,
   nitro: {
-    output: {
-      publicDir: '../admin/server/.output/public/labeler'
+    preset: 'vercel-static',
+    prerender: {
+      routes: ['/']
     }
   },
   runtimeConfig: {
@@ -26,7 +27,7 @@ export default defineNuxtConfig({
       ]
     },
     pageTransition: { name: 'page', mode: 'out-in' },
-    baseURL: '/labeler/'
+    baseURL: '/'
   },
   build: {
     transpile: ['vuetify']
