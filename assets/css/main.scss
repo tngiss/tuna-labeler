@@ -261,7 +261,7 @@ a {
 .camera_circle_container {
   position: relative;
   width: 100%;
-  height: calc(100dvh - 9rem);
+  height: calc(100svh - 9rem);
 }
 
 .camera_input {
@@ -321,7 +321,7 @@ canvas,
   top: 0;
   left: 0;
   width: 100%;
-  height: calc(100dvh - 9rem);
+  height: calc(100svh - 9rem);
   object-fit: cover;
   object-position: center;
   background-color: black;
