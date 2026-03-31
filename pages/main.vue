@@ -89,7 +89,7 @@ export default {
           localStorage.setItem('accessToken', response.data.access_token)
           localStorage.setItem('refreshToken', response.data.refresh_token)
           this.loading = false
-          window.location = '/labeler/top'
+          window.location = '/top'
         })
         .catch(() => {
           this.error = true
