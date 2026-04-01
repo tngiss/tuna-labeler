@@ -181,15 +181,27 @@
 
 html {
   font-family: "Futura LT", sans-serif !important;
+  overflow: hidden !important;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+
+body {
+  max-width: 640px;
+  overflow: hidden !important;
+  max-height: 1140px;
+  margin: 0 auto;
+}
+
+.v-application--wrap {
+  min-height: 100svh !important;
 }
 
 .full-height {
   height: 100svh;
+}
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
 .text-h6,
@@ -207,7 +219,7 @@ a {
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  height: 100vh;
+  height: 100svh;
   width: 100%;
   position: relative;
   z-index: 1;
@@ -229,7 +241,7 @@ a {
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  height: 100vh;
+  height: 100svh;
   width: 100%;
   position: relative;
   z-index: 1;
@@ -369,7 +381,7 @@ canvas,
 .settings-rank-actions {
   left: 10vw;
   margin-bottom: 1rem;
-  width: 80vw;
+  width: 80svw;
   position: fixed;
   bottom: 0;
 }

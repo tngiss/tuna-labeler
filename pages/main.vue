@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid class="entry-bg fill-height">
+  <v-container fluid class="entry-bg full-height">
     <v-form ref="form" v-model="valid">
       <v-row dense class="z-content">
         <v-col cols="10" offset="1">

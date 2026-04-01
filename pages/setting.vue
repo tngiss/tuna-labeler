@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid>
+  <v-container fluid class="full-height">
     <app-bar title="SETTING" :edit="false" :add="true" @add="add" />
     <div class="settings-wrapper">
       <v-row class="justify-center mb-16">

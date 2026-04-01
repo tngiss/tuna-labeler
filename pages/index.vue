@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid class="fill-height bg-white">
+  <v-container fluid class="full-height bg-white">
     <v-row>
       <v-col cols="12" class="text-center">
         <img src="~/assets/images/logo.svg" class="fade-in-image">

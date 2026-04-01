@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-container fluid>
+    <v-container fluid class="full-hieght">
       <app-bar
         title="SETTING"
         :edit="false"
@@ -114,10 +114,7 @@ export default {
     },
     edit () {
       this.ranks = this.ranks.filter(rank => rank !== '')
-      if (
-        !this.ranks.length ||
-        this.rankName === null
-      ) {
+      if (!this.ranks.length || this.rankName === null) {
         this.requiredFieldError = true
         return
       }
