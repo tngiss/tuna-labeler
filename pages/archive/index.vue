@@ -2,7 +2,7 @@
   <div>
     <v-container fluid class="full-height">
       <app-bar title="ARCHIVE" :edit="true" @edit="edit" @cancel="cancel" />
-      <v-row class="mt-4">
+      <v-row class="mt-4 overflow-auto" style="height: calc(100svh - 80px)">
         <v-col cols="12" class="pa-0">
           <v-list class="bg-transparent">
             <v-list-item
