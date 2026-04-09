@@ -1,12 +1,14 @@
 import axios from 'axios'
 
 type LoginData = {
-  email: string,
-  password: string
-}
+  email: string;
+  password: string;
+};
 
 export function login (userData: LoginData) {
-  return axios.post(`/auth/login?email=${userData.email}&password=${userData.password}`)
+  return axios.post(
+    `/auth/login?email=${userData.email}&password=${userData.password}`
+  )
 }
 
 export function rankList () {
@@ -30,7 +32,11 @@ export function deleteRank (id: number) {
 }
 
 export function labelCreate (userData: FormData) {
-  return axios.post('/label/create', userData)
+  return axios.post('/label/create', userData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
 }
 
 export function labelList (page: number) {

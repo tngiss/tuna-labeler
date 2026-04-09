@@ -3,11 +3,6 @@
     fluid
     class="camera_container pa-0 full-height d-flex flex-column overflow-hidden"
   >
-    <!-- <div class="flex-0-1 pa-2 z-100">
-      <v-btn icon color="transparent" to="/top">
-        <v-icon color="white"> home </v-icon>
-      </v-btn>
-    </div> -->
     <div class="camera_circle_container">
       <img
         id="camera_circle"
@@ -59,6 +54,8 @@
         </v-col>
       </v-row>
     </div>
+
+    <!-- Overlay for rank selection -->
     <v-overlay
       :model-value="overlay"
       class="align-end custom-gradient rank-selection-overlay"
@@ -91,6 +88,7 @@
         </v-col>
       </v-row>
     </v-overlay>
+
     <v-btn
       v-if="overlay"
       icon
@@ -106,6 +104,7 @@
         arrow_back_ios
       </v-icon>
     </v-btn>
+
     <app-dialog>
       <v-row class="ma-4" dense>
         <v-col cols="12">
@@ -138,6 +137,7 @@
         </v-col>
       </v-row>
     </app-dialog>
+
     <v-snackbar v-model="snackbar" color="success">
       ラベラーを作成しました。
       <template #actions>
@@ -146,14 +146,29 @@
         </v-btn>
       </template>
     </v-snackbar>
+
+    <!-- Camera warm-up overlay -->
+    <v-overlay
+      v-if="isWarmingUp"
+      absolute
+      class="d-flex flex-column align-center justify-center"
+      style="background-color: rgba(0, 0, 0, 0.7); z-index: 9999"
+    >
+      <v-progress-circular indeterminate color="white" size="48" />
+      <div class="mt-4 text-white text-h6 font-weight-bold">
+        Preparing camera...
+      </div>
+    </v-overlay>
   </v-container>
 </template>
+
 <script>
 import { v4 as uuidv4 } from 'uuid'
 import { mapState } from 'pinia'
 import { useCameraStore } from '@/store/camera'
 import { useGlobalStore } from '@/store/global'
 import { getRanks, labelCreate } from '@/services/api'
+
 export default {
   setup () {
     definePageMeta({
@@ -163,41 +178,43 @@ export default {
   data () {
     return {
       stream: null,
+      imageCapture: null,
       overlay: false,
       step: 1,
       ranks: [],
       rankName: '',
       memo: '',
       snackbar: false,
-      loading: false
+      loading: false,
+      isWarmingUp: false
     }
   },
   computed: {
     ...mapState(useCameraStore, ['imageSource'])
   },
-  mounted () {
+  async mounted () {
     const currentRank = localStorage.getItem('selectedRank')
     if (!currentRank) {
       alert('Please select a rank')
       this.$router.push('/setting')
-    } else {
-      getRanks(Number(currentRank)).then((response) => {
-        this.ranks = response.data.ranks
-        this.rankName = response.data.rank_name
-      })
+      return
     }
-    this.showCamera()
+
+    const response = await getRanks(Number(currentRank))
+    this.ranks = response.data.ranks
+    this.rankName = response.data.rank_name
+
     if (this.imageSource) {
       this.hideCamera()
       this.setCanvasImage()
+    } else {
+      this.showCamera()
     }
   },
   unmounted () {
     useCameraStore().$reset()
     if (this.stream) {
-      this.stream.getTracks().forEach((track) => {
-        track.stop()
-      })
+      this.stream.getTracks().forEach(track => track.stop())
     }
   },
   methods: {
@@ -226,42 +243,142 @@ export default {
       cameraCircle.style.display = 'none'
       libraryButton.style.display = 'none'
     },
-    showCamera () {
+    async showCamera () {
       this.reset()
-      navigator.getUserMedia =
-        navigator.getUserMedia ||
-        navigator.webkitGetUserMedia ||
-        navigator.mozGetUserMedia ||
-        navigator.msGetUserMedia
-      const facingMode = 'environment' || 'user'
+      this.isWarmingUp = true
+
+      const preview = document.querySelector('.camera_circle_container')
+      const previewWidth = preview ? preview.clientWidth : window.innerWidth
+      const previewHeight = preview
+        ? preview.clientHeight
+        : window.innerHeight - 144
+      const previewRatio = previewWidth / previewHeight
 
       const constraints = {
         audio: false,
         video: {
-          facingMode,
-          width: window.innerWidth,
-          height: window.innerWidth * 1.333,
-          aspectRatio: { ideal: 1.333 },
-          focusMode: 'single-shot',
-          exposureMode: 'single-shot'
+          facingMode: { ideal: 'environment' },
+          aspectRatio: { ideal: previewRatio }
         }
       }
-      navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints)
         this.stream = stream
+
         const video = document.getElementById('video')
         video.setAttribute('autoplay', '')
         video.setAttribute('muted', '')
         video.setAttribute('playsinline', '')
-        video.width = window.innerWidth
-        video.height = window.innerWidth * 1.333
         video.srcObject = stream
-      })
+
+        const track = stream.getVideoTracks()[0]
+        this.imageCapture = new ImageCapture(track)
+
+        try {
+          const capabilities = await this.imageCapture.getPhotoCapabilities()
+          const warmupSettings = {}
+          if (capabilities.imageWidth?.max) {
+            warmupSettings.imageWidth = capabilities.imageWidth.max
+          }
+          if (capabilities.imageHeight?.max) {
+            warmupSettings.imageHeight = capabilities.imageHeight.max
+          }
+          await this.imageCapture.takePhoto(warmupSettings)
+        } catch (warmErr) {
+          console.warn('Warm-up failed, fallback to grabFrame():', warmErr)
+          try {
+            await this.imageCapture.grabFrame()
+          } catch (grabErr) {
+            console.warn('grabFrame() also failed:', grabErr)
+          }
+        }
+      } catch (err) {
+        console.error('Error initializing camera:', err)
+      } finally {
+        this.isWarmingUp = false
+      }
     },
-    setCanvasImage () {
-      const image = document.getElementById('canvas-image')
-      image.style.display = 'block'
-      image.src = this.imageSource
-      this.overlay = true
+    async takePicture () {
+      if (!this.imageCapture) {
+        console.error('ImageCapture not initialized')
+        return
+      }
+
+      try {
+        const capabilities = await this.imageCapture.getPhotoCapabilities()
+        const photoSettings = {}
+        if (capabilities.imageWidth?.max) {
+          photoSettings.imageWidth = capabilities.imageWidth.max
+        }
+        if (capabilities.imageHeight?.max) {
+          photoSettings.imageHeight = capabilities.imageHeight.max
+        }
+
+        const blob = await this.imageCapture.takePhoto(photoSettings)
+        this.handleBlob(blob)
+      } catch (error) {
+        console.warn('takePhoto() failed, fallback to grabFrame():', error)
+        try {
+          const bitmap = await this.imageCapture.grabFrame()
+          const canvas = document.createElement('canvas')
+          canvas.width = bitmap.width
+          canvas.height = bitmap.height
+          const ctx = canvas.getContext('2d')
+          ctx.drawImage(bitmap, 0, 0)
+          canvas.toBlob(
+            (blob) => {
+              this.handleBlob(blob)
+            },
+            'image/jpeg',
+            1.0
+          )
+        } catch (grabErr) {
+          console.error('grabFrame() also failed:', grabErr)
+        }
+      }
+    },
+    async handleBlob (blob) {
+      const img = await createImageBitmap(blob)
+      const video = document.getElementById('video')
+      const videoRatio = video.videoWidth / video.videoHeight
+      const targetHeight = img.height
+      const targetWidth = targetHeight * videoRatio
+
+      const canvas = document.createElement('canvas')
+      canvas.width = targetWidth
+      canvas.height = targetHeight
+      const ctx = canvas.getContext('2d')
+
+      const inputRatio = img.width / img.height
+      let sx = 0
+      let sy = 0
+      let sWidth = img.width
+      let sHeight = img.height
+      if (inputRatio > videoRatio) {
+        sWidth = img.height * videoRatio
+        sx = (img.width - sWidth) / 2
+      } else {
+        sHeight = img.width / videoRatio
+        sy = (img.height - sHeight) / 2
+      }
+
+      ctx.drawImage(
+        img,
+        sx,
+        sy,
+        sWidth,
+        sHeight,
+        0,
+        0,
+        targetWidth,
+        targetHeight
+      )
+      const base64data = canvas.toDataURL('image/jpeg', 1.0)
+      useCameraStore().$patch({ imageSource: base64data })
+      this.hideCamera()
+      this.setCanvasImage()
+      this.step = 2
     },
     fileInput (e) {
       const imageFile = e.target.files[0]
@@ -280,61 +397,11 @@ export default {
       const input = document.getElementById('file_selection')
       input.click()
     },
-    takePicture () {
-      const video = document.getElementById('video')
-      const canvas = document.getElementById('canvas')
-      const preview = document.querySelector('.camera_circle_container')
-
-      const sourceWidth = video.videoWidth
-      const sourceHeight = video.videoHeight
-
-      const previewWidth = preview.clientWidth
-      const previewHeight = preview.clientHeight
-
-      const sourceRatio = sourceWidth / sourceHeight
-      const previewRatio = previewWidth / previewHeight
-
-      let sx = 0
-      let sy = 0
-      let sWidth = sourceWidth
-      let sHeight = sourceHeight
-
-      // Preview дээр object-fit: cover ажиллаж байгаа crop-ийг тооцоолно
-      if (sourceRatio > previewRatio) {
-        // video илүү wide бол хоёр хажуу талаас crop хийнэ
-        sWidth = sourceHeight * previewRatio
-        sx = (sourceWidth - sWidth) / 2
-      } else if (sourceRatio < previewRatio) {
-        // video илүү өндөр бол дээр доороос crop хийнэ
-        sHeight = sourceWidth / previewRatio
-        sy = (sourceHeight - sHeight) / 2
-      }
-
-      canvas.width = sWidth
-      canvas.height = sHeight
-
-      const ctx = canvas.getContext('2d')
-      ctx.drawImage(
-        video,
-        sx,
-        sy,
-        sWidth,
-        sHeight,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      )
-
-      const imageData = canvas.toDataURL('image/jpeg', 0.92)
-
-      useCameraStore().$patch({
-        imageSource: imageData
-      })
-
-      this.hideCamera()
-      this.setCanvasImage()
-      this.step = 2
+    setCanvasImage () {
+      const image = document.getElementById('canvas-image')
+      image.style.display = 'block'
+      image.src = this.imageSource
+      this.overlay = true
     },
     convertBase64ToFormData (base64Image, rank) {
       const byteCharacters = atob(base64Image.split(',')[1])
@@ -344,15 +411,14 @@ export default {
       }
       const byteArray = new Uint8Array(byteNumbers)
       const fileName = uuidv4()
-      // add datetime to filename
       const now = new Date()
-      const year = now.getFullYear()
-      const month = String(now.getMonth() + 1).padStart(2, '0')
-      const day = String(now.getDate()).padStart(2, '0')
-      const hours = String(now.getHours()).padStart(2, '0')
-      const minutes = String(now.getMinutes()).padStart(2, '0')
-      const seconds = String(now.getSeconds()).padStart(2, '0')
-      const formattedDate = `${year}${month}${day}_${hours}${minutes}${seconds}`
+      const formattedDate = `${now.getFullYear()}${String(
+        now.getMonth() + 1
+      ).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(
+        now.getHours()
+      ).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(
+        now.getSeconds()
+      ).padStart(2, '0')}`
       const file = new File([byteArray], `${formattedDate}_${fileName}.jpg`, {
         type: 'image/jpeg'
       })
@@ -360,7 +426,7 @@ export default {
       formData.append('file', file)
       formData.append('rank', rank)
       formData.append('rank_name', this.rankName)
-      formData.append('memo', this.memo ? this.memo : 'no memo')
+      formData.append('memo', this.memo || 'no memo')
       return formData
     },
     sendRank (rank) {
@@ -370,7 +436,7 @@ export default {
           this.snackbar = true
           this.overlay = false
           setTimeout(() => {
-            window.location.reload() // check if this is necessary
+            window.location.reload()
             this.loading = false
           }, 1000)
         }
@@ -386,9 +452,7 @@ export default {
     },
     openDialog () {
       useGlobalStore().$patch({
-        dialog: {
-          state: true
-        }
+        dialog: { state: true }
       })
     },
     saveMemo (state) {
@@ -396,9 +460,7 @@ export default {
         this.memo = ''
       }
       useGlobalStore().$patch({
-        dialog: {
-          state: false
-        }
+        dialog: { state: false }
       })
     }
   }
