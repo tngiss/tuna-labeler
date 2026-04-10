@@ -147,16 +147,19 @@
       </template>
     </v-snackbar>
 
-    <!-- Camera warm-up overlay -->
+    <!-- Loading overlay when sending rank -->
     <v-overlay
-      v-if="isWarmingUp"
-      absolute
+      :model-value="loading"
       class="d-flex flex-column align-center justify-center"
-      style="background-color: rgba(0, 0, 0, 0.7); z-index: 9999"
+      style="background-color: rgba(0, 0, 0, 0.8); z-index: 9999; position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh"
+      persistent
+      scrim="false"
     >
-      <v-progress-circular indeterminate color="white" size="48" />
-      <div class="mt-4 text-white text-h6 font-weight-bold">
-        Preparing camera...
+      <div class="d-flex flex-column align-center justify-center">
+        <v-progress-circular indeterminate color="primary" size="64" width="6" />
+        <div class="mt-4 text-white text-h6 font-weight-bold">
+          Sending...
+        </div>
       </div>
     </v-overlay>
   </v-container>
@@ -178,15 +181,13 @@ export default {
   data () {
     return {
       stream: null,
-      imageCapture: null,
       overlay: false,
       step: 1,
       ranks: [],
       rankName: '',
       memo: '',
       snackbar: false,
-      loading: false,
-      isWarmingUp: false
+      loading: false
     }
   },
   computed: {
@@ -245,7 +246,6 @@ export default {
     },
     async showCamera () {
       this.reset()
-      this.isWarmingUp = true
 
       const preview = document.querySelector('.camera_circle_container')
       const previewWidth = preview ? preview.clientWidth : window.innerWidth
@@ -258,7 +258,10 @@ export default {
         audio: false,
         video: {
           facingMode: { ideal: 'environment' },
-          aspectRatio: { ideal: previewRatio }
+          aspectRatio: { ideal: previewRatio },
+          width: { ideal: 4096 },
+          height: { ideal: 2160 },
+          frameRate: { ideal: 30 }
         }
       }
 
@@ -272,109 +275,121 @@ export default {
         video.setAttribute('playsinline', '')
         video.srcObject = stream
 
-        const track = stream.getVideoTracks()[0]
-        this.imageCapture = new ImageCapture(track)
-
-        try {
-          const capabilities = await this.imageCapture.getPhotoCapabilities()
-          const warmupSettings = {}
-          if (capabilities.imageWidth?.max) {
-            warmupSettings.imageWidth = capabilities.imageWidth.max
+        await new Promise((resolve) => {
+          video.onloadedmetadata = () => {
+            video.play()
+            resolve()
           }
-          if (capabilities.imageHeight?.max) {
-            warmupSettings.imageHeight = capabilities.imageHeight.max
-          }
-          await this.imageCapture.takePhoto(warmupSettings)
-        } catch (warmErr) {
-          console.warn('Warm-up failed, fallback to grabFrame():', warmErr)
-          try {
-            await this.imageCapture.grabFrame()
-          } catch (grabErr) {
-            console.warn('grabFrame() also failed:', grabErr)
-          }
-        }
+        })
       } catch (err) {
         console.error('Error initializing camera:', err)
-      } finally {
-        this.isWarmingUp = false
       }
     },
     async takePicture () {
-      if (!this.imageCapture) {
-        console.error('ImageCapture not initialized')
+      const video = document.getElementById('video')
+      if (!video || !video.videoWidth) {
+        console.error('Video not ready')
         return
       }
 
-      try {
-        const capabilities = await this.imageCapture.getPhotoCapabilities()
-        const photoSettings = {}
-        if (capabilities.imageWidth?.max) {
-          photoSettings.imageWidth = capabilities.imageWidth.max
-        }
-        if (capabilities.imageHeight?.max) {
-          photoSettings.imageHeight = capabilities.imageHeight.max
-        }
+      // Actual video stream dimensions
+      const videoWidth = video.videoWidth
+      const videoHeight = video.videoHeight
+      const videoRatio = videoWidth / videoHeight
 
-        const blob = await this.imageCapture.takePhoto(photoSettings)
-        this.handleBlob(blob)
-      } catch (error) {
-        console.warn('takePhoto() failed, fallback to grabFrame():', error)
-        try {
-          const bitmap = await this.imageCapture.grabFrame()
-          const canvas = document.createElement('canvas')
-          canvas.width = bitmap.width
-          canvas.height = bitmap.height
-          const ctx = canvas.getContext('2d')
-          ctx.drawImage(bitmap, 0, 0)
-          canvas.toBlob(
-            (blob) => {
-              this.handleBlob(blob)
-            },
-            'image/jpeg',
-            1.0
-          )
-        } catch (grabErr) {
-          console.error('grabFrame() also failed:', grabErr)
-        }
+      // Display container dimensions (visible in CSS)
+      const displayWidth = video.clientWidth
+      const displayHeight = video.clientHeight
+      const displayRatio = displayWidth / displayHeight
+
+      // Crop like object-fit: cover
+      let sx = 0
+      let sy = 0
+      let sWidth = videoWidth
+      let sHeight = videoHeight
+
+      if (videoRatio > displayRatio) {
+        // Video is wider → sides will be cropped
+        sWidth = videoHeight * displayRatio
+        sx = (videoWidth - sWidth) / 2
+      } else {
+        // Video is taller → top and bottom will be cropped
+        sHeight = videoWidth / displayRatio
+        sy = (videoHeight - sHeight) / 2
       }
+
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d', {
+        alpha: false,
+        desynchronized: true
+      })
+
+      canvas.width = sWidth
+      canvas.height = sHeight
+
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
+
+      // Crop and capture only the visible portion
+      ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight)
+
+      canvas.toBlob(
+        (blob) => {
+          this.handleBlob(blob)
+        },
+        'image/jpeg',
+        1.0
+      )
     },
     async handleBlob (blob) {
       const img = await createImageBitmap(blob)
-      const video = document.getElementById('video')
-      const videoRatio = video.videoWidth / video.videoHeight
-      const targetHeight = img.height
-      const targetWidth = targetHeight * videoRatio
+      const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
-      const canvas = document.createElement('canvas')
-      canvas.width = targetWidth
-      canvas.height = targetHeight
-      const ctx = canvas.getContext('2d')
+      let canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = img.height
 
-      const inputRatio = img.width / img.height
-      let sx = 0
-      let sy = 0
-      let sWidth = img.width
-      let sHeight = img.height
-      if (inputRatio > videoRatio) {
-        sWidth = img.height * videoRatio
-        sx = (img.width - sWidth) / 2
-      } else {
-        sHeight = img.width / videoRatio
-        sy = (img.height - sHeight) / 2
+      let ctx = canvas.getContext('2d', {
+        alpha: false,
+        desynchronized: true
+      })
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
+      ctx.drawImage(img, 0, 0)
+
+      // Check file size and compress
+      let quality = 1.0
+      let base64data = canvas.toDataURL('image/jpeg', quality)
+      let currentSize = Math.round((base64data.length * 3) / 4)
+
+      // Reduce quality
+      while (currentSize > MAX_FILE_SIZE && quality > 0.85) {
+        quality -= 0.03
+        base64data = canvas.toDataURL('image/jpeg', quality)
+        currentSize = Math.round((base64data.length * 3) / 4)
       }
 
-      ctx.drawImage(
-        img,
-        sx,
-        sy,
-        sWidth,
-        sHeight,
-        0,
-        0,
-        targetWidth,
-        targetHeight
-      )
-      const base64data = canvas.toDataURL('image/jpeg', 1.0)
+      // Reduce resolution
+      if (currentSize > MAX_FILE_SIZE) {
+        const scale = Math.sqrt(MAX_FILE_SIZE / currentSize)
+        const targetWidth = Math.floor(img.width * scale)
+        const targetHeight = Math.floor(img.height * scale)
+
+        const resizedCanvas = document.createElement('canvas')
+        resizedCanvas.width = targetWidth
+        resizedCanvas.height = targetHeight
+
+        const resizedCtx = resizedCanvas.getContext('2d', {
+          alpha: false,
+          desynchronized: true
+        })
+        resizedCtx.imageSmoothingEnabled = true
+        resizedCtx.imageSmoothingQuality = 'high'
+
+        resizedCtx.drawImage(canvas, 0, 0, targetWidth, targetHeight)
+        base64data = resizedCanvas.toDataURL('image/jpeg', 0.98)
+      }
+
       useCameraStore().$patch({ imageSource: base64data })
       this.hideCamera()
       this.setCanvasImage()
@@ -431,16 +446,20 @@ export default {
     },
     sendRank (rank) {
       this.loading = true
-      labelCreate(this.convertBase64ToFormData(this.imageSource, rank)).then(
-        () => {
+      labelCreate(this.convertBase64ToFormData(this.imageSource, rank))
+        .then(() => {
           this.snackbar = true
           this.overlay = false
           setTimeout(() => {
-            window.location.reload()
             this.loading = false
+            window.location.reload()
           }, 1000)
-        }
-      )
+        })
+        .catch((error) => {
+          console.error('Label creation failed:', error)
+          this.loading = false
+          alert('Failed to create label. Please try again.')
+        })
     },
     toHome () {
       if (this.step === 2) {
