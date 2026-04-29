@@ -40,11 +40,15 @@ export function labelCreate (userData: FormData) {
 }
 
 export function labelList (page: number) {
+  const endDate = new Date()
+  const startDate = new Date()
+  startDate.setFullYear(startDate.getFullYear() - 1)
+
   return axios.post('/label/list', {
     num_per_page: 'all',
     page,
-    date_start: '2024-11-01',
-    date_end: '2025-11-30'
+    date_start: startDate.toISOString().split('T')[0],
+    date_end: endDate.toISOString().split('T')[0]
   })
 }
 
